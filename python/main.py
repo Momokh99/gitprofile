@@ -9,10 +9,13 @@ OUT_OF_RANGE = 99999
 WEEKS = 26
 class RepoStore:
     def __init__(self, path="~/.gogitlocalstats"):
-        self.path = path
+        self.path = os.path.expanduser(path)
     def read(self) -> list[str]:
-        with open(self.path) as f:
-            return [line.strip() for line in f.readlines()]
+        try:
+            with open(self.path) as f:
+                return [line.strip() for line in f.readlines()]
+        except FileNotFoundError:
+            return []
 
     def write(self, repos: list[str]):
         with open(self.path, "w") as f:
@@ -102,10 +105,11 @@ class ContribGrid():
             for dt, email in entries:
                 if email != self.email:
                     continue
-                days_ago=count_days_since_date(dt) + calc_offset()
-                if days_ago == OUT_OF_RANGE:
+                days_since = count_days_since_date(dt)
+                if days_since == OUT_OF_RANGE:
                     continue
-                self.commits[days_ago]+=1
+                days_ago = days_since + calc_offset()
+                self.commits[days_ago] += 1
         return self
 
 
